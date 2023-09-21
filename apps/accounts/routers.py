@@ -3,8 +3,10 @@ from fastapi import APIRouter, HTTPException, status
 from . import schemas
 from .models import User
 from .services import totp
+from .services.authentication import authenticate
 from .services.email import EmailHandler
 from .services.hash import Hash
+from .services.jwt import Token
 
 router = APIRouter(
     prefix="/accounts",
@@ -32,3 +34,16 @@ def register(user_data: schemas.UserRegisterSchema):
 
     EmailHandler.send_totp_email(totp.generate_totp(user_dict["totp_secret"]))
     return schemas.UserSchema.model_validate(user)
+
+
+@router.post(
+    "/login",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.TokenObtainSchema
+)
+def login(login_data: schemas.UserLogInSchema):
+    user = authenticate(**login_data.model_dump())
+
+    user_tokens = Token.for_user(user)
+
+    return schemas.TokenObtainSchema(**user_tokens)
