@@ -49,6 +49,11 @@ class UserLogInSchema(BaseModel):
     password: str
 
 
+class UserVerifySchema(BaseModel):
+    email: EmailStr
+    totp: str
+
+
 class TokenObtainSchema(BaseModel):
     access: str
     refresh: str
