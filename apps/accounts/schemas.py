@@ -47,3 +47,8 @@ class UserSchema(BaseModel):
 class UserLogInSchema(BaseModel):
     email: EmailStr
     password: str
+
+
+class TokenObtainSchema(BaseModel):
+    access: str
+    refresh: str
