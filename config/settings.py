@@ -13,7 +13,7 @@ DATABASES = {
     "database": "fast_store.db"
 }
 
-TOTP_EXPIRATION_TIME = timedelta(seconds=90)
+TOTP_EXPIRATION_SECONDS = 90
 
 SECRET_KEY = '85bb38db2f01f7ab8fe3d7a5180008a8b6d8b8b126ab07c8178c8c5c536984e5'
 
