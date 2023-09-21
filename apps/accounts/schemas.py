@@ -32,3 +32,13 @@ class UserRegisterSchema(BaseModel):
                 "Passwords do not match",
             )
         return self
+
+
+class UserSchema(BaseModel):
+    id: int
+    email: EmailStr
+    is_active: bool
+    is_verified: bool
+
+    class Config:
+        from_attributes = True
