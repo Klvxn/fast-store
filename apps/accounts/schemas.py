@@ -42,3 +42,8 @@ class UserSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserLogInSchema(BaseModel):
+    email: EmailStr
+    password: str
