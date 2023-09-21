@@ -1,7 +1,7 @@
 from pyotp import TOTP, random_base32
 
 # todo: WHAT IF NOT ADDED?
-from config.settings import TOTP_EXPIRATION_TIME
+from config.settings import TOTP_EXPIRATION_SECONDS
 
 
 def generate_secret():
@@ -9,10 +9,10 @@ def generate_secret():
 
 
 def generate_totp(secret: str):
-    totp = TOTP(secret, interval=TOTP_EXPIRATION_TIME)
+    totp = TOTP(secret, interval=TOTP_EXPIRATION_SECONDS)
     return totp.now()
 
 
 def verify_totp(secret: str, user_totp: str):
-    totp = TOTP(secret, interval=TOTP_EXPIRATION_TIME)
+    totp = TOTP(secret, interval=TOTP_EXPIRATION_SECONDS)
     return totp.verify(user_totp)
