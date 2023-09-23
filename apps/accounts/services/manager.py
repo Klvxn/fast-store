@@ -13,7 +13,7 @@ class UserManager:
 
     @classmethod
     async def create(cls, data: dict) -> User:
-        if cls.get_user_by_email(data["email"]):
+        if await cls.get_user_by_email(data["email"]):
             raise exceptions.EmailInUse
 
         data["password"] = Hash.hash_password(data["password"])

@@ -1,12 +1,10 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from . import schemas
-from .models import User
 from .services import totp
-from .services.authentication import authenticate
 from .services.email import EmailHandler
-from .services.hash import Hash
 from .services.jwt import Token
+from .services.manager import UserManager
 
 router = APIRouter(
     prefix="/accounts",
@@ -22,19 +20,8 @@ router = APIRouter(
     response_model=schemas.UserSchema
 )
 async def register(user_data: schemas.UserRegisterSchema):
-    if User.filter(User.email == user_data.email).first():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This email is already registered"
-        )
-
-    user_dict = user_data.model_dump(exclude={"confirm"})
-    user_dict["password"] = Hash.hash_password(user_dict["password"])
-    user_dict["totp_secret"] = totp.generate_secret()
-
-    user = User.create(**user_dict)
-
-    EmailHandler.send_totp_email(totp.generate_totp(user_dict["totp_secret"]))
+    user = await UserManager.create(user_data.model_dump(exclude={"confirm"}))
+    EmailHandler.send_totp_email(totp.generate_totp(user.totp_secret))
     return schemas.UserSchema.model_validate(user)
 
 
@@ -44,10 +31,8 @@ async def register(user_data: schemas.UserRegisterSchema):
     response_model=schemas.TokenObtainSchema
 )
 async def login(login_data: schemas.UserLogInSchema):
-    user = authenticate(**login_data.model_dump())
-
+    user = await UserManager.authenticate(login_data.model_dump())
     user_tokens = Token.for_user(user)
-
     return schemas.TokenObtainSchema(**user_tokens)
 
 
@@ -57,17 +42,8 @@ async def login(login_data: schemas.UserLogInSchema):
     response_model=schemas.UserSchema,
 )
 async def verify(verification_data: schemas.UserVerifySchema):
-    user = User.filter(User.email == verification_data.email).first()
-    if not user or not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User with this email does not exist"
-        )
-    if user.is_verified:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This user is already verified"
-        )
+    verified_user = await UserManager.verify(verification_data.model_dump())
+    return schemas.UserSchema.model_validate(verified_user)
 
     if not totp.verify_totp(user.totp_secret, verification_data.totp):
         raise HTTPException(
