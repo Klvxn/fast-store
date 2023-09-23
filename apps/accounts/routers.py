@@ -14,12 +14,14 @@ router = APIRouter(
 )
 
 
+# TODO: Add description, tags, summary, response to routers
+
 @router.post(
     "/register",
     status_code=status.HTTP_201_CREATED,
     response_model=schemas.UserSchema
 )
-def register(user_data: schemas.UserRegisterSchema):
+async def register(user_data: schemas.UserRegisterSchema):
     if User.filter(User.email == user_data.email).first():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -41,7 +43,7 @@ def register(user_data: schemas.UserRegisterSchema):
     status_code=status.HTTP_200_OK,
     response_model=schemas.TokenObtainSchema
 )
-def login(login_data: schemas.UserLogInSchema):
+async def login(login_data: schemas.UserLogInSchema):
     user = authenticate(**login_data.model_dump())
 
     user_tokens = Token.for_user(user)
@@ -54,7 +56,7 @@ def login(login_data: schemas.UserLogInSchema):
     status_code=status.HTTP_200_OK,
     response_model=schemas.UserSchema,
 )
-def verify(verification_data: schemas.UserVerifySchema):
+async def verify(verification_data: schemas.UserVerifySchema):
     user = User.filter(User.email == verification_data.email).first()
     if not user or not user.is_active:
         raise HTTPException(
