@@ -8,17 +8,17 @@ def authenticate(email: str, password: str) -> User:
     user = User.filter(User.email == email).first()
     if not user or not Hash.verify(password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Wrong Email or password"
         )
     if not user.is_verified:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is not verified"
         )
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is banned"
         )
     return user
