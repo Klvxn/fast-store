@@ -9,7 +9,11 @@ class UserManager:
 
     @classmethod
     async def get_user_by_email(cls, email: str):
-        return cls.Model.filter(User.email == email).first()
+        return cls.Model.filter(cls.Model.email == email).first()
+
+    @classmethod
+    async def get_user_by_id(cls, user_id: int):
+        return cls.Model.filter(cls.Model.id == user_id).first()
 
     @classmethod
     async def create(cls, data: dict) -> User:
