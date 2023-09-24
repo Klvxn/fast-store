@@ -16,7 +16,11 @@ class UserManager:
         return cls.Model.filter(cls.Model.id == user_id).first()
 
     @classmethod
-    async def create(cls, data: dict) -> User:
+    async def update_last_login(cls, user_id: int):
+        User.update(user_id, last_login=datetime.utcnow())
+
+    @classmethod
+    async def create_user(cls, data: dict) -> User:
         if await cls.get_user_by_email(data["email"]):
             raise exceptions.EmailInUse
 
