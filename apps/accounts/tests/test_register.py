@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from apps.main import app
 from config.database import DatabaseManager
+from ..error_codes import AccountErrorCodes
 from ..faker.data import FakeAccount
 from ..models import User
 from ..services.hash import Hash
@@ -69,6 +70,7 @@ class TestRegister:
 
         response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.json()["detail"] == AccountErrorCodes.EmailInUse
 
         FakeAccount.remove_user(user.id)
 
