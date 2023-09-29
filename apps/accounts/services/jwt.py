@@ -12,11 +12,13 @@ class Token:
     # Todo : check the security of secret and the way the to distinguish refresh and access tokens
     # Todo: find a way to manage state of tokens so that at each time there is only one access and refresh active
     # TODO: Manage all the abstractions implemented here based on usage of this service class in app
+    # TODO: Manage CSRF attacks from JWT
 
     @staticmethod
     def get_secret_key() -> str:
-        secret_key = settings.SECRET_KEY
-        if not secret_key:
+        try:
+            secret_key = settings.SECRET_KEY
+        except AttributeError:
             raise ImproperlyConfigured(
                 "The SECRET_KEY variable is required to generate tokens"
             )
