@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from apps.core.base_test_case import BaseTestCase
 from apps.main import app
 from config.database import DatabaseManager
+from ..error_codes import AccountErrorCodes
 from ..faker.data import FakeAccount
 
 
@@ -51,3 +52,50 @@ class TestLogin(BaseTestCase):
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "email" in response.json()["detail"][0]["loc"]
+
+    def test_unavailable_email(self):
+        self.data["email"] = "test@invalid.com"
+        response = self.client.post(self.path, json=self.data)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json()["detail"] == AccountErrorCodes.InvalidCredentials
+
+    def test_invalid_password(self):
+        user = FakeAccount.populate_user(is_verified=True)
+
+        self.data["password"] = "invalid/Pass123"
+        response = self.client.post(self.path, json=self.data)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json()["detail"] == AccountErrorCodes.InvalidCredentials
+
+        FakeAccount.remove_user(user.id)
+
+    def test_inactive_user(self):
+        user = FakeAccount.populate_user(is_active=False, is_verified=True)
+
+        response = self.client.post(self.path, json=self.data)
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json()["detail"] == AccountErrorCodes.InactiveAccount
+
+        FakeAccount.remove_user(user.id)
+
+    def test_not_verified_user(self):
+        user = FakeAccount.populate_user(is_active=True, is_verified=False)
+
+        response = self.client.post(self.path, json=self.data)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.json()["detail"] == AccountErrorCodes.UserNotVerified
+
+        FakeAccount.remove_user(user.id)
+
+    def test_successful_login(self):
+        user = FakeAccount.populate_user(is_verified=True)
+        response = self.client.post(self.path, json=self.data)
+
+        assert response.status_code == status.HTTP_200_OK
+        assert "access" in response.json()
+        assert "refresh" in response.json()
+        # TODO : last login is not being updated
+        # assert user.last_login.second == datetime.utcnow().second
