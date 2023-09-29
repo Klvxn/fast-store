@@ -41,9 +41,12 @@ class TestRegister:
         response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_invalid_email(self):
-        # TODO: Use parametrize
-        self.data["email"] = "invalid.com"
+    @pytest.mark.parametrize(
+        "invalid_email",
+        ["missing@symbolcom", "user@missingtld.", "@missingusername.com"]
+    )
+    def test_invalid_email(self, invalid_email):
+        self.data["email"] = invalid_email
         response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
