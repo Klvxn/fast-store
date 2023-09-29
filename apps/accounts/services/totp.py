@@ -1,7 +1,12 @@
 from pyotp import TOTP, random_base32
 
 # todo: WHAT IF NOT ADDED?
-from config.settings import TOTP_EXPIRATION_SECONDS
+from apps.core.exceptions import ImproperlyConfigured
+
+try:
+    from config.settings import TOTP_EXPIRATION_SECONDS
+except ImportError:
+    raise ImproperlyConfigured("TOTP_EXPIRATION_SECONDS is not added to settings")
 
 
 def generate_secret():
