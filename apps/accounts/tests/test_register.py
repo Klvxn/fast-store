@@ -40,3 +40,44 @@ class TestRegister:
         response = self.client.post(self.path, json=data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    def test_invalid_email(self):
+        # TODO: Use parametrize
+        data = {"email": "invalid.com", "password": "testpass", "confirm": "testpass"}
+        response = self.client.post(self.path, json=data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    @pytest.mark.parametrize("password", ["inv/P1", "test/pass12", "TEST/PASS12", "testPass123", "test/Pass"])
+    def test_invalid_password(self, password):
+        data = {"email": "test@user.com", "password": password, "confirm": password}
+        response = self.client.post(self.path, json=data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_not_matching_passwords(self):
+        data = {"email": "test@user.com", "password": "testpass", "confirm": "notmatching"}
+        response = self.client.post(self.path, json=data)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_existing_user(self):
+        user = User.create(email="test@test.com", password="testpass123")
+
+        data = {"email": user.email, "password": "test/Pass123", "confirm": "test/Pass123"}
+        response = self.client.post(self.path, json=data)
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_successful_signup(self):
+        data = {"email": "test@user.com", "password": "test/Pass123", "confirm": "test/Pass123"}
+        response = self.client.post(self.path, json=data)
+
+        expected = response.json()
+        user = User.filter(User.email == data["email"]).first()
+
+        assert response.status_code == status.HTTP_201_CREATED
+        assert expected["is_active"]
+        assert not expected["is_verified"]
+        assert expected["email"] == data["email"]
+
+        assert user is not None
+        assert Hash.verify(data["password"], user.password)
+        assert user.is_active
+        assert not user.is_verified
+        assert user.totp_secret is not None
