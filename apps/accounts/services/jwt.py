@@ -1,11 +1,15 @@
 from datetime import datetime
 from datetime import timedelta
-from typing import Optional
+from typing import Optional, Dict, Any
 
+from fastapi import HTTPException, status
 from jose import jwt, JWTError
 
 from apps.core.exceptions import ImproperlyConfigured
 from config import settings
+from .manager import UserManager
+from ..error_codes import AccountErrorCodes
+from ..models import User
 
 
 class Token:
@@ -107,21 +111,29 @@ class Token:
         return {"access": access, "refresh": refresh}
 
     @classmethod
-    def verify_jwt(cls, token: str) -> bool:
-        # TODO: manage this function based on prospect usages for authorization and verification
+    def decode(cls, token: str) -> dict:
+
         secret_key = cls.get_secret_key()
         algorithm = cls.get_cryptographic_algorithm()
         issuer = cls.get_issuer()
 
         try:
-            payload = jwt.decode(token, secret_key, algorithms=[algorithm], issuer=issuer)
-            user_id = payload.get("sub")
-            if user_id is None or not isinstance(user_id, str):
-                return False
-
-            # TODO: Validate token data
-
+            return jwt.decode(token, secret_key, algorithms=[algorithm], issuer=issuer)
         except JWTError:
-            return False
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidJWT
+            )
 
-        return True
+    @classmethod
+    def get_user_from_payload(cls, payload: Dict[str, Any]) -> User:
+
+        user = UserManager.get_user_by_id(int(payload.get("sub")))
+
+        if not user or not user.is_active or not user.is_verified:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid jwt subject"
+            )
+
+        return user
