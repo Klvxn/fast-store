@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from apps.main import app
 from config.database import DatabaseManager
+from ..faker.data import FakeAccount
 from ..models import User
 from ..services.hash import Hash
 
@@ -22,7 +23,8 @@ class TestRegister:
 
     @classmethod
     def setup_method(cls):
-        cls.db_session = DatabaseManager.session
+        cls.data = FakeAccount.user_payload.copy()
+        cls.data["confirm"] = cls.data["password"]
 
     @pytest.mark.parametrize("method", ["GET", "PUT", "DELETE"])
     def test_router_via_not_allowed_methods(self, method: str):
@@ -35,26 +37,28 @@ class TestRegister:
 
     @pytest.mark.parametrize("missing_key", ["email", "password", "confirm"])
     def test_missing_data_fields(self, missing_key: str):
-        data = {"email": "test@user.com", "password": "testpass", "confirm": "testpass"}
-        del data[missing_key]
-        response = self.client.post(self.path, json=data)
+        del self.data[missing_key]
+        response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_invalid_email(self):
         # TODO: Use parametrize
-        data = {"email": "invalid.com", "password": "testpass", "confirm": "testpass"}
-        response = self.client.post(self.path, json=data)
+        self.data["email"] = "invalid.com"
+        response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    @pytest.mark.parametrize("password", ["inv/P1", "test/pass12", "TEST/PASS12", "testPass123", "test/Pass"])
+    @pytest.mark.parametrize(
+        "password",
+        ["inv/P1", "test/pass12", "TEST/PASS12", "testPass123", "test/Pass"]
+    )
     def test_invalid_password(self, password):
-        data = {"email": "test@user.com", "password": password, "confirm": password}
-        response = self.client.post(self.path, json=data)
+        self.data["password"] = self.data["confirm"] = password
+        response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_not_matching_passwords(self):
-        data = {"email": "test@user.com", "password": "testpass", "confirm": "notmatching"}
-        response = self.client.post(self.path, json=data)
+        self.data["confirm"] = "notmatching/Pass123"
+        response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_existing_user(self):
