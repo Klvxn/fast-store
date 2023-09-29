@@ -62,26 +62,26 @@ class TestRegister:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_existing_user(self):
-        user = User.create(email="test@test.com", password="testpass123")
+        user = FakeAccount.populate_user(is_verified=True)
 
-        data = {"email": user.email, "password": "test/Pass123", "confirm": "test/Pass123"}
-        response = self.client.post(self.path, json=data)
+        response = self.client.post(self.path, json=self.data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
+        FakeAccount.remove_user(user.id)
+
     def test_successful_signup(self):
-        data = {"email": "test@user.com", "password": "test/Pass123", "confirm": "test/Pass123"}
-        response = self.client.post(self.path, json=data)
+        response = self.client.post(self.path, json=self.data)
 
         expected = response.json()
-        user = User.filter(User.email == data["email"]).first()
+        user = User.filter(User.email == self.data["email"]).first()
 
         assert response.status_code == status.HTTP_201_CREATED
         assert expected["is_active"]
         assert not expected["is_verified"]
-        assert expected["email"] == data["email"]
+        assert expected["email"] == self.data["email"]
 
         assert user is not None
-        assert Hash.verify(data["password"], user.password)
+        assert Hash.verify(self.data["password"], user.password)
         assert user.is_active
         assert not user.is_verified
         assert user.totp_secret is not None
