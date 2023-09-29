@@ -38,22 +38,15 @@ class Token:
         # TODO: Implement issuer based on domain and site url
         pass
 
-    @staticmethod
-    def get_jwt_id() -> str:
-        # TODO: Implement jti in order to manage JWTs
-        pass
-
     @classmethod
     def _create_jwt_token(
             cls,
             expires_delta: timedelta,
             token_type: str,
             subject: int,
-            issuer: Optional[str] = None
     ) -> str:
 
-        if not issuer:
-            issuer = cls.get_issuer()
+        issuer = cls.get_issuer()
 
         payload = {
             "iss": issuer,
