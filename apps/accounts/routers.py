@@ -20,7 +20,7 @@ router = APIRouter(
     response_model=schemas.UserSchema
 )
 async def register(user_data: schemas.UserRegisterSchema):
-    user = await UserManager.create(user_data.model_dump(exclude={"confirm"}))
+    user = UserManager.create_user(user_data.model_dump(exclude={"confirm"}))
     EmailHandler.send_totp_email(totp.generate_totp(user.totp_secret))
     return schemas.UserSchema.model_validate(user)
 
@@ -31,7 +31,7 @@ async def register(user_data: schemas.UserRegisterSchema):
     response_model=schemas.TokenObtainSchema
 )
 async def login(login_data: schemas.UserLogInSchema):
-    user = await UserManager.authenticate(login_data.model_dump())
+    user = UserManager.authenticate(login_data.model_dump())
     user_tokens = Token.for_user(user)
     return schemas.TokenObtainSchema(**user_tokens)
 
@@ -42,7 +42,7 @@ async def login(login_data: schemas.UserLogInSchema):
     response_model=schemas.UserSchema,
 )
 async def verify(verification_data: schemas.UserVerifySchema):
-    verified_user = await UserManager.verify(verification_data.model_dump())
+    verified_user = UserManager.verify(verification_data.model_dump())
     return schemas.UserSchema.model_validate(verified_user)
 
     if not totp.verify_totp(user.totp_secret, verification_data.totp):
