@@ -45,10 +45,15 @@ async def verify(verification_data: schemas.UserVerifySchema):
     verified_user = UserManager.verify(verification_data.model_dump())
     return schemas.UserSchema.model_validate(verified_user)
 
-    if not totp.verify_totp(user.totp_secret, verification_data.totp):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="TOTP is invalid or expired"
-        )
-    User.update(user.id, is_verified=True, totp_secret=None)
-    return schemas.UserSchema.model_validate(user)
+
+@router.post(
+    "/refresh",
+    status_code=status.HTTP_200_OK,
+    response_model=schemas.TokenRefreshOutSchema
+)
+async def refresh(refresh_data: schemas.TokenRefreshInSchema):
+    payload = Token.decode(refresh_data.refresh)
+    user = Token.get_user_from_payload(payload)
+    access_token = Token.create_access_token(user.id)
+    UserManager.update_last_login(user.id)
+    return schemas.TokenRefreshOutSchema(access=access_token)

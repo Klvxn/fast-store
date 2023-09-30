@@ -57,3 +57,11 @@ class UserVerifySchema(BaseModel):
 class TokenObtainSchema(BaseModel):
     access: str
     refresh: str
+
+
+class TokenRefreshInSchema(BaseModel):
+    refresh: str
+
+
+class TokenRefreshOutSchema(BaseModel):
+    access: str
