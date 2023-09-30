@@ -1,6 +1,5 @@
 from pyotp import TOTP, random_base32
 
-# todo: WHAT IF NOT ADDED?
 from apps.core.exceptions import ImproperlyConfigured
 
 try:
