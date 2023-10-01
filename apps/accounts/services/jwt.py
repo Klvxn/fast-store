@@ -43,23 +43,29 @@ class Token:
         pass
 
     @classmethod
-    def _create_jwt_token(
+    def get_payload(
             cls,
+            subject: int,
             expires_delta: timedelta,
             token_type: str,
-            subject: int,
-    ) -> str:
 
+    ):
         issuer = cls.get_issuer()
+        utc_now = datetime.utcnow()
 
         payload = {
             "iss": issuer,
-            "iat": int(datetime.utcnow().timestamp()),
-            "nbf": int(datetime.utcnow().timestamp()),
-            "exp": datetime.utcnow() + expires_delta,
+            "iat": utc_now,
+            "nbf": utc_now,
+            "sub": str(subject),
+            "exp": utc_now + expires_delta,
             "type": token_type,
-            "sub": str(subject)
         }
+
+        return payload
+
+    @classmethod
+    def encode(cls, payload: dict) -> str:
 
         secret_key = cls.get_secret_key()
         algorithm = cls.get_cryptographic_algorithm()
@@ -80,8 +86,8 @@ class Token:
                 raise TypeError(
                     "Variable ACCESS_TOKEN_EXPIRE_TIME must be of type 'timedelta'"
                 )
-
-        return cls._create_jwt_token(expires_delta, "access", subject)
+        payload = cls.get_payload(subject, expires_delta, "access")
+        return cls.encode(payload)
 
     @classmethod
     def create_refresh_token(
@@ -97,7 +103,8 @@ class Token:
                     "Variable REFRESH_TOKEN_EXPIRE_TIME must be of type 'timedelta'"
                 )
 
-        return cls._create_jwt_token(expires_delta, "refresh", subject)
+        payload = cls.get_payload(subject, expires_delta, "refresh")
+        return cls.encode(payload)
 
     @classmethod
     def for_user(
@@ -118,12 +125,36 @@ class Token:
         issuer = cls.get_issuer()
 
         try:
-            return jwt.decode(token, secret_key, algorithms=[algorithm], issuer=issuer)
+            payload = jwt.decode(token, secret_key, algorithms=[algorithm], issuer=issuer)
         except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=AccountErrorCodes.InvalidJWT
             )
+
+        if not (token_type := payload.get("type")) or token_type not in ["access", "refresh"]:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidTokenType
+            )
+        if not payload.get("sub"):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidJWT
+            )
+
+        return payload
+
+    @classmethod
+    def decode_refresh_token(cls, token: str):
+        payload = cls.decode(token)
+
+        if payload["type"] != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidTokenType
+            )
+        return payload
 
     @classmethod
     def get_user_from_payload(cls, payload: Dict[str, Any]) -> User:
@@ -133,7 +164,7 @@ class Token:
         if not user or not user.is_active or not user.is_verified:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid jwt subject"
+                detail=AccountErrorCodes.InvalidJWT
             )
 
         return user

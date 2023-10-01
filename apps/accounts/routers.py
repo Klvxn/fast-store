@@ -52,7 +52,7 @@ async def verify(verification_data: schemas.UserVerifySchema):
     response_model=schemas.TokenRefreshOutSchema
 )
 async def refresh(refresh_data: schemas.TokenRefreshInSchema):
-    payload = Token.decode(refresh_data.refresh)
+    payload = Token.decode_refresh_token(refresh_data.refresh)
     user = Token.get_user_from_payload(payload)
     access_token = Token.create_access_token(user.id)
     UserManager.update_last_login(user.id)
