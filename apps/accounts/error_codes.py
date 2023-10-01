@@ -7,3 +7,4 @@ class AccountErrorCodes:
     InvalidTOTP = "TOTP is invalid or expired"
     InvalidVerification = "Invalid verification"
     InvalidJWT = "Invalid JWT"
+    InvalidTokenType = "Token type in invalid"
