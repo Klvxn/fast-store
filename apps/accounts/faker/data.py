@@ -1,7 +1,7 @@
 from ..models import User
 from ..services.jwt import Token
 from ..services.manager import UserManager
-from ..services.totp import generate_secret, generate_totp
+from ..services.totp import generate_secret
 
 
 class FakeAccount:
@@ -25,3 +25,13 @@ class FakeAccount:
         secret_key = generate_secret()
         user = cls.populate_user(totp_secret=secret_key, **kwargs)
         return user
+
+    @classmethod
+    def get_user_refresh_token(cls, **kwargs):
+        user = cls.populate_user(**kwargs)
+        return user, Token.create_refresh_token(user.id)
+
+    @classmethod
+    def get_user_access_token(cls, **kwargs):
+        user = cls.populate_user(**kwargs)
+        return user, Token.create_access_token(user.id)
