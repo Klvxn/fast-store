@@ -24,7 +24,7 @@ class User(FastModel):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, nullable=True, onupdate=func.now())
 
-
+    # TODO : Add RBAC to the user model
     # groups
     # permissions
     
@@ -49,6 +49,7 @@ class Permission(FastModel):
 
     groups = relationship("Group", secondary=groups_permissions, back_populates="permissions")
 
+    # TODO: Implement permission model
 
 class Group(FastModel):
     __tablename__ = "groups"
