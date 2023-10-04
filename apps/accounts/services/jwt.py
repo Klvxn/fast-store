@@ -45,7 +45,7 @@ class Token:
     @classmethod
     def get_payload(
             cls,
-            subject: int,
+            user: User,
             expires_delta: timedelta,
             token_type: str,
 
@@ -57,9 +57,10 @@ class Token:
             "iss": issuer,
             "iat": utc_now,
             "nbf": utc_now,
-            "sub": str(subject),
+            "sub": str(user.id),
             "exp": utc_now + expires_delta,
             "type": token_type,
+            "is_admin": user.is_superuser
         }
 
         return payload
@@ -75,7 +76,7 @@ class Token:
     @classmethod
     def create_access_token(
             cls,
-            subject: int,
+            user: User,
             expires_delta: Optional[timedelta] = None
     ):
 
@@ -86,7 +87,7 @@ class Token:
                 raise TypeError(
                     "Variable ACCESS_TOKEN_EXPIRE_TIME must be of type 'timedelta'"
                 )
-        payload = cls.get_payload(subject, expires_delta, "access")
+        payload = cls.get_payload(user, expires_delta, "access")
         return cls.encode(payload)
 
     @classmethod
