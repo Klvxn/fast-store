@@ -38,7 +38,7 @@ class ContentType(FastModel):
     id = Column(Integer, primary_key=True)
     app_label = Column(String(100))
     model = Column(String(100))
-    permissions = relationship("Permission", back_populates="ctype", cascade="all, delete-orphan")
+    permissions = relationship("Permission", back_populates="content_type", cascade="all, delete-orphan")
 
 
 groups_permissions = Table(
@@ -57,6 +57,7 @@ class Permission(FastModel):
 
     codename = Column(String(100))
 
+    content_type_id = Column(Integer, ForeignKey("content_types.id"))
     content_type = relationship("ContentType", back_populates="permissions")
     groups = relationship("Group", secondary=groups_permissions, back_populates="permissions")
 
