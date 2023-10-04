@@ -8,3 +8,4 @@ class AccountErrorCodes:
     InvalidVerification = "Invalid verification"
     InvalidJWT = "Invalid JWT"
     InvalidTokenType = "Token type in invalid"
+    AccessDenied = "Your access to this resource is restricted"
