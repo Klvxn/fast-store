@@ -145,21 +145,9 @@ class Token:
             )
 
         return payload
-
+    
     @classmethod
-    def decode_refresh_token(cls, token: str):
-        payload = cls.decode(token)
-
-        if payload["type"] != "refresh":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=AccountErrorCodes.InvalidTokenType
-            )
-        return payload
-
-    @classmethod
-    def get_user_from_payload(cls, payload: Dict[str, Any]) -> User:
-
+    def get_user_from_payload(cls, payload: Dict[str, Any]):
         user = UserManager.get_user_by_id(int(payload.get("sub")))
 
         if not user or not user.is_active or not user.is_verified:
@@ -168,4 +156,29 @@ class Token:
                 detail=AccountErrorCodes.InvalidJWT
             )
 
+        return user
+
+    @classmethod
+    def get_refresh_token_user(cls, token: str):
+        payload = cls.decode(token)
+        user = cls.get_user_from_payload(payload)
+        
+        if payload["type"] != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidTokenType
+            )
+        return user
+
+    @classmethod
+    def get_access_token_user(cls, token: str) -> User:
+
+        payload = cls.decode(token)
+        user = cls.get_user_from_payload(payload)
+
+        if payload["type"] != "access":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=AccountErrorCodes.InvalidTokenType
+            )
         return user
