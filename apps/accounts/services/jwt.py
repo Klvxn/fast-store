@@ -113,8 +113,8 @@ class Token:
             user,
             expires_delta: Optional[timedelta] = None
     ):
-        access = cls.create_access_token(user.id, expires_delta)
-        refresh = cls.create_refresh_token(user.id, expires_delta)
+        access = cls.create_access_token(user, expires_delta)
+        refresh = cls.create_refresh_token(user, expires_delta)
 
         return {"access": access, "refresh": refresh}
 
