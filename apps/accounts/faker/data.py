@@ -29,9 +29,9 @@ class FakeAccount:
     @classmethod
     def get_user_refresh_token(cls, **kwargs):
         user = cls.populate_user(**kwargs)
-        return user, Token.create_refresh_token(user.id)
+        return user, Token.create_refresh_token(user)
 
     @classmethod
     def get_user_access_token(cls, **kwargs):
         user = cls.populate_user(**kwargs)
-        return user, Token.create_access_token(user.id)
+        return user, Token.create_access_token(user)

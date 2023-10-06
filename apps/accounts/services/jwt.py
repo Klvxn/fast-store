@@ -93,7 +93,7 @@ class Token:
     @classmethod
     def create_refresh_token(
             cls,
-            subject: int,
+            user: User,
             expires_delta: Optional[timedelta] = None
     ):
         if not expires_delta:
@@ -104,7 +104,7 @@ class Token:
                     "Variable REFRESH_TOKEN_EXPIRE_TIME must be of type 'timedelta'"
                 )
 
-        payload = cls.get_payload(subject, expires_delta, "refresh")
+        payload = cls.get_payload(user, expires_delta, "refresh")
         return cls.encode(payload)
 
     @classmethod
