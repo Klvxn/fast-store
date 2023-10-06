@@ -5,6 +5,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from freezegun import freeze_time
 from jose import jwt
+from ..models import User
 
 from apps.main import app
 from config.database import DatabaseManager
@@ -45,7 +46,7 @@ class TestRefresh:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_unavailable_sub_user_token(self):
-        data = {"refresh": Token.create_refresh_token(subject=123331233399)}
+        data = {"refresh": Token.create_refresh_token(user=User(id=999991223))}
 
         response = self.client.post(self.path, json=data)
 
@@ -76,7 +77,7 @@ class TestRefresh:
 
     def test_expired_refresh_token(self):
         with freeze_time(datetime.utcnow() - timedelta(days=2)):
-            refresh_token = Token.create_refresh_token(subject=1)
+            refresh_token = Token.create_refresh_token(user=User(id=1))
             data = {"refresh": refresh_token}
 
         response = self.client.post(self.path, json=data)
@@ -86,7 +87,7 @@ class TestRefresh:
 
     @pytest.mark.parametrize("missing_payload", ["exp", "sub", "iss", "nbf"])
     def test_refresh_token_missing_payloads(self, missing_payload):
-        payloads = Token.get_payload(123, REFRESH_TOKEN_EXPIRE_TIME, "refresh")
+        payloads = Token.get_payload(User(id=123), REFRESH_TOKEN_EXPIRE_TIME, "refresh")
         del payloads[missing_payload]
         data = {"refresh": jwt.encode(payloads, SECRET_KEY, "HS256")}
 
