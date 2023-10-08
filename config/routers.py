@@ -1,4 +1,5 @@
 import importlib
+import logging
 import os
 from pathlib import Path
 
@@ -10,9 +11,6 @@ class RouterManager:
     This class detects and imports FastAPI routers from 'routers.py' files in
     the subdirectories of the 'apps' directory. It allows you to easily include
     routers in your FastAPI application.
-
-    Attributes:
-        None
 
     Methods:
         import_routers():
@@ -44,5 +42,6 @@ class RouterManager:
                         if hasattr(module, "router"):
                             # Add the imported router to your FastAPI application
                             self.app.include_router(module.router)
-                    except ImportError:
-                        pass
+                    except ImportError as e:
+                        # Log the ImportError message for debugging purposes
+                        logging.error(f"Error importing module {module_name}: {e}")
