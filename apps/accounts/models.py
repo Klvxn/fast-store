@@ -14,8 +14,6 @@ class User(FastModel):
     last_name = Column(String(256), nullable=True)
 
     is_active = Column(Boolean, default=True)
-
-    # TODO remove `is_verified` check it from `is_active`: if id active means that user is verified too.
     is_verified = Column(Boolean, default=False)
 
     is_superuser = Column(Boolean, default=False)

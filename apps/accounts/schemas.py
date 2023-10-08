@@ -8,6 +8,8 @@ from pydantic_core import PydanticCustomError
 class UserRegisterSchema(BaseModel):
     email: EmailStr
     password: str
+
+    # TODO rename to `password_confirm`
     confirm: str
 
     @field_validator("password")
