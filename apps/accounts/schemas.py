@@ -4,6 +4,7 @@ from pydantic import BaseModel, field_validator, EmailStr, model_validator
 from pydantic_core import PydanticCustomError
 
 
+# TODO rename class to `RegisterIn`
 class UserRegisterSchema(BaseModel):
     email: EmailStr
     password: str
@@ -34,6 +35,7 @@ class UserRegisterSchema(BaseModel):
         return self
 
 
+# TODO rename class to `RegisterOut`
 class UserSchema(BaseModel):
     id: int
     email: EmailStr
@@ -44,24 +46,29 @@ class UserSchema(BaseModel):
         from_attributes = True
 
 
+# TODO rename class to `LoginIn`
 class UserLogInSchema(BaseModel):
     email: EmailStr
     password: str
 
 
+# TODO rename class to `RegisterConfirmIn`
 class UserVerifySchema(BaseModel):
     email: EmailStr
     totp: str
 
 
+# TODO rename class to `LoginOut`
 class TokenObtainSchema(BaseModel):
     access: str
     refresh: str
 
 
+# TODO rename class to `RefreshTokenIn`
 class TokenRefreshInSchema(BaseModel):
     refresh: str
 
 
+# TODO rename class to `RefreshTokenOut`
 class TokenRefreshOutSchema(BaseModel):
     access: str
