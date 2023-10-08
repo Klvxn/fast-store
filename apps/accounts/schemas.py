@@ -10,7 +10,7 @@ class UserRegisterSchema(BaseModel):
     password: str
 
     # TODO rename to `password_confirm`
-    confirm: str
+    password_confirm: str
 
     @field_validator("password")
     @classmethod
@@ -29,7 +29,7 @@ class UserRegisterSchema(BaseModel):
 
     @model_validator(mode="after")
     def passwords_match(self):
-        if self.password != self.confirm:
+        if self.password != self.password_confirm:
             raise PydanticCustomError(
                 "not_matching_passwords",
                 "Passwords do not match",
