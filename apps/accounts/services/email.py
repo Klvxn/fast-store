@@ -1,3 +1,4 @@
+# TODO use the email code in the django project
 class EmailHandler:
 
     @staticmethod

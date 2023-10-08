@@ -8,6 +8,8 @@ except ImportError:
     raise ImproperlyConfigured("TOTP_EXPIRATION_SECONDS is not added to settings")
 
 
+# TODO move this codes to the `OAuthService`
+
 def generate_secret():
     return random_base32()
 

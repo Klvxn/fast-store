@@ -8,6 +8,7 @@ from ..error_codes import AccountErrorCodes
 from ..models import User
 
 
+# TODO rename this class to `OAuthService`
 class UserManager:
     Model = User
 

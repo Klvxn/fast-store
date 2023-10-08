@@ -14,15 +14,25 @@ class User(FastModel):
     last_name = Column(String(256), nullable=True)
 
     is_active = Column(Boolean, default=True)
+
+    # TODO remove `is_verified` check it from `is_active`: if id active means that user is verified too.
     is_verified = Column(Boolean, default=False)
+
     is_superuser = Column(Boolean, default=False)
+
+    # TODO remove this too, for now the `is_superuser` is ok.
     is_staff = Column(Boolean, default=False)
 
     password = Column(String, nullable=False)
+
+    # TODO rename this to `otp`
     totp_secret = Column(String)
 
     last_login = Column(DateTime, nullable=True)
+
+    # TODO rename field to `date_joined`
     created_at = Column(DateTime, server_default=func.now())
+
     updated_at = Column(DateTime, nullable=True, onupdate=func.now())
 
     # TODO : Add RBAC to the user model
@@ -34,6 +44,7 @@ class User(FastModel):
     # has_perm
 
 
+# TODO Ask, ContentType what is this?
 class ContentType(FastModel):
     __tablename__ = "content_types"
     id = Column(Integer, primary_key=True)
@@ -42,6 +53,7 @@ class ContentType(FastModel):
     permissions = relationship("Permission", back_populates="content_type", cascade="all, delete-orphan")
 
 
+# TODO Ask, ContentType what is this?
 groups_permissions = Table(
     "groups_permissions",
     FastModel.metadata,
@@ -50,6 +62,7 @@ groups_permissions = Table(
 )
 
 
+# TODO we need to add class and check permission for an action: user.has_add_product() -> boolean
 class Permission(FastModel):
     __tablename__ = "permissions"
 
@@ -63,6 +76,7 @@ class Permission(FastModel):
     groups = relationship("Group", secondary=groups_permissions, back_populates="permissions")
 
 
+# TODO, remove, don't need to it, permissions is ok.
 class Group(FastModel):
     __tablename__ = "groups"
 

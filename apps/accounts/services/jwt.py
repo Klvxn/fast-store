@@ -12,6 +12,7 @@ from ..error_codes import AccountErrorCodes
 from ..models import User
 
 
+# TODO move this code to `OAuthService` or refactor it in there and add docs to the methods to describe its behavior.
 class Token:
     # Todo : check the security of secret and the way the to distinguish refresh and access tokens
     # Todo: find a way to manage state of tokens so that at each time there is only one access and refresh active

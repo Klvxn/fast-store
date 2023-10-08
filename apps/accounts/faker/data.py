@@ -1,9 +1,11 @@
+# TODO refactor imports: e.g. `from apps.accounts.models import User`
 from ..models import User
 from ..services.jwt import Token
 from ..services.manager import UserManager
 from ..services.totp import generate_secret
 
 
+# TODO use the code in the django project.
 class FakeAccount:
     user_payload = {
         "email": "test@test.com",

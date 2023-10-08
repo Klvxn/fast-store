@@ -7,10 +7,12 @@ from .services.jwt import Token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/accounts/login")
 
 
+# TODO move this code to `OAuthService`
 async def get_user(token: str = Depends(oauth2_scheme)):
     return Token.get_access_token_user(token)
 
 
+# TODO move this code to `OAuthService`
 async def get_superuser(user=Depends(get_user)):
     if not user.is_superuser:
         raise HTTPException(
