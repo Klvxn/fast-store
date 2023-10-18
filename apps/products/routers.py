@@ -27,6 +27,8 @@ All operations related to products, such as managing shopping carts, processing 
 Every time we create product, the media should be None, because the Media after creating a product will be
 attached to it.
 """
+from typing import Optional
+
 from fastapi import APIRouter, status, Depends, Form, UploadFile, File, HTTPException, Query, Path
 from fastapi.responses import JSONResponse
 
@@ -79,7 +81,7 @@ async def retrieve_product(product_id: int):
     description='Retrieve a list of products.',
     tags=["Product"])
 async def list_produces(
-    product_status: str = Query(None, description='Filter products by status'),
+    product_status: Optional[str] = Query(None, description='Filter products by status'),
     current_user: User = Depends(AuthToken.fetch_user_by_token)
 ):
     if not current_user.is_admin:
