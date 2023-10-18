@@ -234,7 +234,7 @@ class ProductService:
         return cls.retrieve_variant(variant_id)
 
     @classmethod
-    def list_products(cls, limit: int = 12):
+    def list_products(cls, limit: int = 12, status: str = 'active'):
         # - if "default variant" is not set, first variant will be
         # - on list of products, for price, get it from "default variant"
         # - if price or stock of default variant is 0 then select first variant that is not 0
@@ -249,7 +249,7 @@ class ProductService:
 
         with DatabaseManager.session as session:
             products = session.execute(
-                select(Product.id).limit(limit)
+                select(Product.id).limit(limit).filter(Product.status == status)
             )
 
         for product in products:

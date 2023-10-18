@@ -27,10 +27,11 @@ All operations related to products, such as managing shopping carts, processing 
 Every time we create product, the media should be None, because the Media after creating a product will be
 attached to it.
 """
-
-from fastapi import APIRouter, status, Form, UploadFile, File, HTTPException, Query, Path
+from fastapi import APIRouter, status, Depends, Form, UploadFile, File, HTTPException, Query, Path
 from fastapi.responses import JSONResponse
 
+from apps.accounts.services.auth import AuthToken
+from apps.accounts.services.user import User
 from apps.core.services.media import MediaService
 from apps.products import schemas
 from apps.products.services import ProductService
@@ -77,12 +78,13 @@ async def retrieve_product(product_id: int):
     summary='Retrieve a list of products',
     description='Retrieve a list of products.',
     tags=["Product"])
-async def list_produces():
-    # TODO permission: admin users (admin, is_admin), none-admin users
-    # TODO as none-admin permission, list products that they status is `active`.
-    # TODO as none-admin, dont list the product with the status of `archived` and `draft`.
-    # TODO only admin can list products with status `draft`.
-    products = ProductService.list_products()
+async def list_produces(
+    product_status: str = Query(None, description='Filter products by status'),
+    current_user: User = Depends(AuthToken.fetch_user_by_token)
+):
+    if not current_user.is_admin:
+        product_status = 'active'
+    products = ProductService.list_products(status=product_status)
     if products:
         return {'products': products}
     return JSONResponse(
