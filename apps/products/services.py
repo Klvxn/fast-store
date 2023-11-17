@@ -195,7 +195,8 @@ class ProductService:
 
     @classmethod
     def retrieve_product(cls, product_id):
-        cls.product = Product.get_or_404(product_id)
+        products = Product.filter(Product.status != 'draft')
+        cls.product = products.get(product_id)
         cls.options = cls.retrieve_options(product_id)
         cls.variants = cls.retrieve_variants(product_id)
         cls.media = cls.retrieve_media_list(product_id)

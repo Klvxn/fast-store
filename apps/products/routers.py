@@ -70,7 +70,6 @@ async def create_product(product: schemas.CreateProductIn):
     tags=["Product"]
 )
 async def retrieve_product(product_id: int):
-    # TODO user can retrieve products with status of (active , archived)
     product = ProductService.retrieve_product(product_id)
     return {"product": product}
 
