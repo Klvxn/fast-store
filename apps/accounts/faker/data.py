@@ -1,18 +1,23 @@
 from faker import Faker
 
-from apps.accounts.services.auth import AccountService, AuthToken
+from apps.accounts.services.authenticate import AccountService
+from apps.accounts.services.token import TokenService
 from apps.accounts.services.user import UserManager
-from apps.core.date_time import DateTime
 
 
-class FakeAccount:
+class BaseFakeAccount:
+    fake = Faker()
+    password = 'Test_1234'
+
+    @classmethod
+    def random_email(cls):
+        return cls.fake.email()
+
+
+class FakeAccount(BaseFakeAccount):
     """
     Populates the database with fake accounts.
     """
-
-    fake = Faker()
-
-    password = 'Test_1234'
 
     @classmethod
     def register_unverified(cls):
@@ -29,9 +34,8 @@ class FakeAccount:
 
         # --- read otp code ---
         user = UserManager.get_user(email=register_payload['email'])
-        otp = AccountService.read_otp(user.otp_key)
 
-        return user.email, otp
+        return user.email, TokenService.create_otp_token()
 
     @classmethod
     def verified_registration(cls):
@@ -48,18 +52,29 @@ class FakeAccount:
 
         # --- read otp code ---
         user = UserManager.get_user(email=register_payload['email'])
-        otp = AccountService.read_otp(user.otp_key)
-        verified = AccountService.verify_registration(**{'email': user.email, 'otp': otp})
-        return user.email, verified['access_token']
+        verified = AccountService.verify_registration(**{'email': user.email,
+                                                         'otp': TokenService.create_otp_token()})
+        return user, verified['access_token']
+
+
+class FakeUser(BaseFakeAccount):
 
     @classmethod
-    def random_email(cls):
-        return cls.fake.email()
+    def populate_admin(cls):
+        """
+        Create an admin and generate an access token too.
+        """
 
+        user, access_token = FakeAccount.verified_registration()
+        user_data = {
+            'first_name': cls.fake.first_name(),
+            'last_name': cls.fake.last_name(),
+            'is_superuser': True,
+            'role': 'admin'
+        }
 
-class FakeUser:
-    fake = Faker()
-    password = 'Test_1234'
+        user = UserManager.update_user(user.id, **user_data)
+        return user, access_token
 
     @classmethod
     def populate_user(cls):
@@ -67,23 +82,11 @@ class FakeUser:
         Create a new user and generate an access token too.
         """
 
+        user, access_token = FakeAccount.verified_registration()
         user_data = {
-            'email': cls.random_email(),
-            'password': cls.password,  # TODO hash password
             'first_name': cls.fake.first_name(),
-            'last_name': cls.fake.last_name(),
-            'otp_key': None,
-            'verified_email': True,
-            'is_active': True,
-            'is_superuser': False,
-            'last_login': DateTime.now(),
-            'updated_at': DateTime.now()
+            'last_name': cls.fake.last_name()
         }
 
-        user = UserManager.new_user(**user_data)
-        access_token = AuthToken.create_access_token(user)
+        user = UserManager.update_user(user.id, **user_data)
         return user, access_token
-
-    @classmethod
-    def random_email(cls):
-        return cls.fake.email()
