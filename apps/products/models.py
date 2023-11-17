@@ -1,4 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint, Text, DateTime, func, Numeric
+import enum
+from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint, Text, DateTime, func, Numeric, Enum
 from sqlalchemy.orm import relationship
 
 from config.database import FastModel
@@ -14,9 +15,13 @@ class Product(FastModel):
     # Active: The product is ready to sell and is available to customers on the online store, sales channels, and apps.
     # Archived: The product is no longer being sold and isn't available to customers on sales channels and apps.
     # Draft: The product isn't ready to sell and is unavailable to customers on sales channels and apps.
-
-    # status_enum = Enum('active', 'archived', 'draft', name='status_enum')
-    status = Column(String, default='draft')
+    
+    class StatusEnum(enum.Enum):
+        active = 'active'
+        archived = 'archived'
+        draft = 'draft'
+        
+    status = Column(String, Enum(StatusEnum), default=StatusEnum.draft)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, nullable=True)
     published_at = Column(DateTime, nullable=True)
