@@ -32,7 +32,7 @@ from typing import Optional
 from fastapi import APIRouter, status, Depends, Form, UploadFile, File, HTTPException, Query, Path
 from fastapi.responses import JSONResponse
 
-from apps.accounts.services.auth import AuthToken
+from apps.accounts.services.token import TokenService
 from apps.accounts.services.user import User
 from apps.core.services.media import MediaService
 from apps.products import schemas
@@ -55,7 +55,8 @@ router = APIRouter(
     response_model=schemas.CreateProductOut,
     summary='Create a new product',
     description='Create a new product.',
-    tags=["Product"])
+    tags=["Product"]
+)
 async def create_product(product: schemas.CreateProductIn):
     return {'product': ProductService.create_product(product.model_dump())}
 
@@ -66,7 +67,8 @@ async def create_product(product: schemas.CreateProductIn):
     response_model=schemas.RetrieveProductOut,
     summary='Retrieve a single product',
     description="Retrieve a single product.",
-    tags=["Product"])
+    tags=["Product"]
+)
 async def retrieve_product(product_id: int):
     # TODO user can retrieve products with status of (active , archived)
     product = ProductService.retrieve_product(product_id)
@@ -79,12 +81,13 @@ async def retrieve_product(product_id: int):
     response_model=schemas.ListProductOut,
     summary='Retrieve a list of products',
     description='Retrieve a list of products.',
-    tags=["Product"])
+    tags=["Product"]
+)
 async def list_produces(
     product_status: Optional[str] = Query(None, description='Filter products by status'),
-    current_user: User = Depends(AuthToken.fetch_user_by_token)
+    current_user: User = Depends(TokenService.fetch_user)
 ):
-    if not current_user.is_admin:
+    if not current_user.is_superuser:
         product_status = 'active'
     products = ProductService.list_products(status=product_status)
     if products:
@@ -101,9 +104,19 @@ async def list_produces(
     response_model=schemas.UpdateProductOut,
     summary='Updates a product',
     description='Updates a product.',
-    tags=["Product"])
-async def update_product(product_id: int, payload: schemas.UpdateProductIn):
-    # TODO permission: only admin
+    tags=["Product"]
+)
+async def update_product(
+    product_id: int, 
+    payload: schemas.UpdateProductIn,
+    current_user: User = Depends(TokenService.fetch_user)
+):
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail='You are not allowed to update a product.'
+        )
+        
     # TODO update a product with media
 
     updated_product_data = {}
@@ -125,7 +138,8 @@ async def update_product(product_id: int, payload: schemas.UpdateProductIn):
     status_code=status.HTTP_204_NO_CONTENT,
     summary='Deletes an existing product',
     description='Deletes an existing product.',
-    tags=['Product'])
+    tags=['Product']
+)
 async def delete_product(product_id: int):
     ProductService.delete_product(product_id)
 
@@ -143,7 +157,8 @@ async def delete_product(product_id: int):
     response_model=schemas.UpdateVariantOut,
     summary='Updates an existing product variant',
     description='Modify an existing Product Variant.',
-    tags=['Product Variant'])
+    tags=['Product Variant']
+)
 async def update_variant(variant_id: int, payload: schemas.UpdateVariantIn):
     update_data = {}
 
@@ -163,7 +178,8 @@ async def update_variant(variant_id: int, payload: schemas.UpdateVariantIn):
     response_model=schemas.RetrieveVariantOut,
     summary='Retrieve a single product variant',
     description='Retrieves a single product variant.',
-    tags=['Product Variant'])
+    tags=['Product Variant']
+)
 async def retrieve_variant(variant_id: int):
     return {'variant': ProductService.retrieve_variant(variant_id)}
 
@@ -174,7 +190,8 @@ async def retrieve_variant(variant_id: int):
     response_model=schemas.ListVariantsOut,
     summary='Retrieves a list of product variants',
     description='Retrieves a list of product variants.',
-    tags=['Product Variant'])
+    tags=['Product Variant']
+)
 async def list_variants(product_id: int):
     return {'variants': ProductService.retrieve_variants(product_id)}
 
@@ -196,7 +213,8 @@ when updating a product, actions on product's images are:
     response_model=schemas.CreateProductMediaOut,
     summary="Create a new product image",
     description="Create a new product image.",
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def create_product_media(x_files: list[UploadFile] = File(), product_id: int = Path(),
                                alt: str | None = Form(None)):
     # check the file size and type
@@ -214,7 +232,8 @@ async def create_product_media(x_files: list[UploadFile] = File(), product_id: i
     response_model=schemas.RetrieveMediaOut,
     summary='Retrieve a single product image',
     description='Get a single product image by id.',
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def retrieve_single_media(media_id: int):
     return {'media': ProductService.retrieve_single_media(media_id)}
 
@@ -225,7 +244,8 @@ async def retrieve_single_media(media_id: int):
     response_model=schemas.RetrieveProductMediaOut,
     summary="Receive a list of all Product Images",
     description="Receive a list of all Product Images.",
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def list_product_media(product_id: int):
     media = ProductService.retrieve_media_list(product_id=product_id)
     if media:
@@ -242,7 +262,8 @@ async def list_product_media(product_id: int):
     response_model=schemas.UpdateMediaOut,
     summary='Updates an existing image',
     description='Updates an existing image.',
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def update_media(media_id: int, file: UploadFile = File(), alt: str | None = Form(None)):
     update_data = {}
 
@@ -264,7 +285,8 @@ async def update_media(media_id: int, file: UploadFile = File(), alt: str | None
     status_code=status.HTTP_204_NO_CONTENT,
     summary='Delete image from a product',
     description='Delete image from a product.',
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def delete_product_media(product_id: int, media_ids: str = Query(...)):
     media_ids_list = list(map(int, media_ids.split(',')))
     ProductService.delete_product_media(product_id, media_ids_list)
@@ -275,6 +297,7 @@ async def delete_product_media(product_id: int, media_ids: str = Query(...)):
     status_code=status.HTTP_204_NO_CONTENT,
     summary='Delete a media file',
     description='Delete a media file.',
-    tags=['Product Image'])
+    tags=['Product Image']
+)
 async def delete_media_file(media_id: int):
     ProductService.delete_media_file(media_id)

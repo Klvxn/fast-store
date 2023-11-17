@@ -1,6 +1,7 @@
 from itertools import product as options_combination
 
 from sqlalchemy import select, and_, or_
+from typing import Optional
 
 from apps.core.date_time import DateTime
 from apps.core.services.media import MediaService
@@ -236,7 +237,7 @@ class ProductService:
         return cls.retrieve_variant(variant_id)
 
     @classmethod
-    def list_products(cls, limit: int = 12, status: str = 'active'):
+    def list_products(cls, limit: int = 12, status: Optional[str] = 'active'):
         # - if "default variant" is not set, first variant will be
         # - on list of products, for price, get it from "default variant"
         # - if price or stock of default variant is 0 then select first variant that is not 0
